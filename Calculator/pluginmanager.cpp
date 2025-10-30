@@ -1,6 +1,9 @@
 #include "pluginmanager.h"
 #include <iostream>
 #include <windows.h>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 PluginManager::PluginManager() = default;
 
@@ -10,7 +13,54 @@ PluginManager::~PluginManager() {
 
 void PluginManager::loadPlugins(const std::string& directory) {
     std::cout << "Loading plugins from: " << directory << "\n";
-    // Заглушка
+
+    // Проверяем существование директории
+    if (!fs::exists(directory)) {
+        std::cout << "Plugins directory doesn't exist. Creating...\n";
+        fs::create_directory(directory);
+        return;
+    }
+
+    // Проходим по всем файлам в директории
+    for (const auto& entry : fs::directory_iterator(directory)) {
+        if (entry.is_regular_file() && entry.path().extension() == ".dll") {
+            std::string dllPath = entry.path().string();
+            std::cout << "Found DLL: " << dllPath << "\n";
+
+            // Загружаем библиотеку
+            HMODULE hModule = LoadLibraryA(dllPath.c_str());
+            if (!hModule) {
+                std::cout << "Failed to load: " << dllPath << "\n";
+                continue;
+            }
+
+            // Получаем функцию создания плагина
+            auto createFunc = (IPlugin * (*)())GetProcAddress(hModule, "create_plugin");
+            if (!createFunc) {
+                std::cout << "No create_plugin function in: " << dllPath << "\n";
+                FreeLibrary(hModule);
+                continue;
+            }
+
+            // Создаем экземпляр плагина
+            try {
+                std::unique_ptr<IPlugin> plugin(createFunc());
+                std::string pluginName = plugin->getName();
+
+                m_plugins[pluginName] = std::move(plugin);
+                m_loadedLibraries.push_back(hModule);
+
+                std::cout << "Successfully loaded: " << pluginName << "\n";
+
+            }
+            catch (const std::exception& e) {
+                std::cout << "Error creating plugin: " << e.what() << "\n";
+                FreeLibrary(hModule);
+            }
+        }
+    }
+
+    std::cout << "Total plugins loaded: " << m_plugins.size() << "\n";
 }
 
 IPlugin* PluginManager::getPlugin(const std::string& functionName) const {

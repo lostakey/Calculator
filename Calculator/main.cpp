@@ -3,10 +3,21 @@
 #include "pluginmanager.h"
 
 int main() {
-    std::cout << "Calculator Starting...\n";
+    std::cout << "=== Calculator with Plugins ===\n";
 
     PluginManager pm;
     pm.loadPlugins("./plugins");
+
+    // Простой тест
+    IPlugin* testPlugin = pm.getPlugin("test");
+    if (testPlugin) {
+        std::vector<double> args = { 5.0 };
+        double result = testPlugin->execute(args);
+        std::cout << "Test plugin result: " << result << "\n";
+    }
+    else {
+        std::cout << "Test plugin not found\n";
+    }
 
     std::string input;
     while (true) {
