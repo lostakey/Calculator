@@ -4,7 +4,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <windows.h>
+#include <windows.h> 
 
 class PluginManager {
 public:
