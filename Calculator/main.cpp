@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include "pluginmanager.h"
+#include "calculator.h"
 
 int main() {
     std::cout << "=== Calculator with Plugins ===\n";
@@ -8,23 +9,21 @@ int main() {
     PluginManager pm;
     pm.loadPlugins("./plugins");
 
-    // Простой тест
-    IPlugin* testPlugin = pm.getPlugin("test");
-    if (testPlugin) {
-        std::vector<double> args = { 5.0 };
-        double result = testPlugin->execute(args);
-        std::cout << "Test plugin result: " << result << "\n";
-    }
-    else {
-        std::cout << "Test plugin not found\n";
-    }
+    Calculator calc(&pm);
 
     std::string input;
     while (true) {
         std::cout << "> ";
         std::getline(std::cin, input);
         if (input == "quit") break;
-        std::cout << "You entered: " << input << "\n";
+
+        try {
+            double result = calc.calculate(input);
+            std::cout << "Result: " << result << "\n";
+        }
+        catch (const std::exception& e) {
+            std::cout << "Error: " << e.what() << "\n";
+        }
     }
 
     return 0;
