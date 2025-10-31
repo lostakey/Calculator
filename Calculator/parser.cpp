@@ -26,7 +26,7 @@ std::unique_ptr<ASTNode> Parser::parseExpression() {
 std::unique_ptr<ASTNode> Parser::parseTerm() {
     auto left = parseFactor();
 
-    while (m_position < m_tokens.size() && (currentToken() == "*" || currentToken() == "/")) {
+    while (m_position < m_tokens.size() && (currentToken() == "*" || currentToken() == "/" || currentToken() == "%")) {
         std::string op = currentToken();
         consumeToken();
         auto right = parseFactor();
@@ -37,6 +37,19 @@ std::unique_ptr<ASTNode> Parser::parseTerm() {
 }
 
 std::unique_ptr<ASTNode> Parser::parseFactor() {
+    auto left = parseExponent();
+
+    while (m_position < m_tokens.size() && currentToken() == "^") {
+        std::string op = currentToken();
+        consumeToken();
+        auto right = parseExponent();
+        left = std::make_unique<BinaryOpNode>(op, std::move(left), std::move(right));
+    }
+
+    return left;
+}
+
+std::unique_ptr<ASTNode> Parser::parseExponent() {
     if (isFunctionCall()) {
         return parseFunctionCall();
     }
@@ -75,7 +88,19 @@ std::unique_ptr<ASTNode> Parser::parsePrimary() {
         return node;
     }
 
-    // Number
+    // Константы
+    if (m_position < m_tokens.size()) {
+        const std::string& token = currentToken();
+        if (token == "pi") {
+            consumeToken();
+            return std::make_unique<NumberNode>(3.14159265358979323846);
+        }
+        if (token == "e") {
+            consumeToken();
+            return std::make_unique<NumberNode>(2.71828182845904523536);
+        }
+    }
+
     if (std::isdigit(currentToken()[0]) || (currentToken()[0] == '-' && currentToken().length() > 1)) {
         double value = std::stod(currentToken());
         consumeToken();
@@ -110,6 +135,5 @@ bool Parser::isFunctionCall() const {
     const std::string& token = m_tokens[m_position];
     if (!std::isalpha(token[0])) return false;
 
-    // Check if next token is "("
     return (m_position + 1 < m_tokens.size() && m_tokens[m_position + 1] == "(");
 }

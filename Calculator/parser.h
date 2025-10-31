@@ -17,6 +17,7 @@ private:
     std::unique_ptr<ASTNode> parseExpression();
     std::unique_ptr<ASTNode> parseTerm();
     std::unique_ptr<ASTNode> parseFactor();
+    std::unique_ptr<ASTNode> parseExponent();
     std::unique_ptr<ASTNode> parseFunctionCall();
     std::unique_ptr<ASTNode> parsePrimary();
 

@@ -3,19 +3,14 @@
 #include <stdexcept>
 #include <cctype>
 
-// Глобальная ссылка на PluginManager для AST
-PluginManager* g_pluginManager = nullptr;
-
-Calculator::Calculator(PluginManager* pm) : m_pluginManager(pm) {
-    g_pluginManager = pm; // Устанавливаем глобальную ссылку
-}
+Calculator::Calculator(PluginManager* pm) : m_pluginManager(pm) {}
 
 double Calculator::calculate(const std::string& expression) {
     try {
         auto tokens = tokenize(expression);
         Parser parser(tokens);
         auto ast = parser.parse();
-        return ast->evaluate();
+        return ast->evaluate(m_pluginManager);
 
     }
     catch (const std::exception& e) {
@@ -44,7 +39,7 @@ std::vector<std::string> Calculator::tokenize(const std::string& expression) {
         else if (std::isalpha(c)) {
             currentToken += c;
         }
-        else if (c == '+' || c == '-' || c == '*' || c == '/' || c == '^') {
+        else if (c == '+' || c == '-' || c == '*' || c == '/' || c == '^' || c == '%') {
             if (!currentToken.empty()) {
                 tokens.push_back(currentToken);
                 currentToken.clear();
