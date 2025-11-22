@@ -12,6 +12,7 @@ public:
     ~PluginManager();
     void loadPlugins(const std::string& directory);
     IPlugin* getPlugin(const std::string& functionName) const;
+    std::vector<std::string> getAvailableFunctions() const;
 
 private:
     std::unordered_map<std::string, std::unique_ptr<IPlugin>> m_plugins;
